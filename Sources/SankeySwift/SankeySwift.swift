@@ -435,7 +435,6 @@ public struct SankeyDefaultAnnotation: View {
                 .foregroundStyle(.secondary)
         }
         .padding()
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
     }
 }
 
@@ -616,8 +615,6 @@ private struct SankeyNodeView<Label: View>: View {
                         .offset(x: labelPosition == .outside ? (8 + layoutNode.width) : 0)
                 }
             }
-
-
             .position(
                 x: layoutNode.x + layoutNode.width / 2 + labelSpace,
                 y: layoutNode.y + layoutNode.height / 2
@@ -748,6 +745,27 @@ public struct SankeyDiagramView<LabelContent: View, AnnotationContent: View>: Vi
             ZStack(alignment: .topLeading) {
                 // Draw tappable links
                 ForEach(layout.links, id: \.link.id) { layoutLink in
+                    
+                    // Draw nodes
+                    ForEach(layout.nodes, id: \.node.id) { layoutNode in
+                        SankeyNodeView(
+                            layoutNode: layoutNode,
+                            labelSpace: labelPosition == .outside ? (labelSpace) : 0,
+                            showLabels: showLabels,
+                            labelPosition: labelPosition,
+                            valueFormat: valueFormat,
+                            labelDynamicTypeSize: labelDynamicTypeSize,
+                            hasSelection: hasSelection,
+                            labelBuilder: { context, alignment in
+                                if let builder = labelBuilder {
+                                    AnyView(builder(context, alignment))
+                                } else {
+                                    AnyView(defaultLabelView(context: context, alignment: alignment))
+                                }
+                            }
+                        )
+                    }
+                    
                     SankeyLinkView(
                         layoutLink: layoutLink,
                         labelSpace: labelPosition == .outside ? (labelSpace) : 0,
@@ -776,25 +794,6 @@ public struct SankeyDiagramView<LabelContent: View, AnnotationContent: View>: Vi
                     )
                 }
 
-                // Draw nodes
-                ForEach(layout.nodes, id: \.node.id) { layoutNode in
-                    SankeyNodeView(
-                        layoutNode: layoutNode,
-                        labelSpace: labelPosition == .outside ? (labelSpace) : 0,
-                        showLabels: showLabels,
-                        labelPosition: labelPosition,
-                        valueFormat: valueFormat,
-                        labelDynamicTypeSize: labelDynamicTypeSize,
-                        hasSelection: hasSelection,
-                        labelBuilder: { context, alignment in
-                            if let builder = labelBuilder {
-                                AnyView(builder(context, alignment))
-                            } else {
-                                AnyView(defaultLabelView(context: context, alignment: alignment))
-                            }
-                        }
-                    )
-                }
             }
             .drawingGroup() // Render as single Metal texture for better performance
         }

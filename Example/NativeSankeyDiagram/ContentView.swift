@@ -50,7 +50,6 @@ struct ContentView: View {
             SankeyDiagramView(data: data,
                               nodeWidth: 8,
                               gradientLinks: true)
-            .labelPosition(.outside)
             .valueFormat(.custom({ amount in
                 amount.formatted(.currency(code: "USD"))
             }))
@@ -90,6 +89,7 @@ struct ContentView: View {
         .labelFont(.body)
         .labelFontWeight(.semibold)
         .valueFont(.caption)
+        .labelPosition(.outside)
         .padding()
 }
 
