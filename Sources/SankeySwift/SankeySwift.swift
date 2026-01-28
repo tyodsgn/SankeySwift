@@ -572,6 +572,118 @@ private struct SankeyNodeView<Label: View>: View {
         RoundedRectangle(cornerRadius: 0)
             .fill(layoutNode.node.color)
             .frame(width: layoutNode.width, height: layoutNode.height)
+//            .overlay(alignment: .leading) {
+//                if shouldShowLabel && shouldShowOnLeading && labelPosition == .inside {
+//                    labelBuilder(labelContext(value: isFirstColumn ? layoutNode.outgoingValue : layoutNode.incomingValue), .leading)
+//                        .applyDynamicTypeSize(labelDynamicTypeSize)
+//                        .fixedSize()
+//                        .opacity(hasSelection ? 0.7 : 1)
+//                        .padding(.leading, labelPosition == .inside ? 8 + layoutNode.width : 0)
+//                        .offset(x: labelPosition == .outside ? -(8 + layoutNode.width) : 0)
+//                }
+//            }
+//            .overlay(alignment: .trailing) {
+//                if shouldShowLabel && shouldShowOnTrailing && labelPosition == .inside {
+//                    labelBuilder(labelContext(value: layoutNode.incomingValue), .trailing)
+//                        .applyDynamicTypeSize(labelDynamicTypeSize)
+//                        .fixedSize()
+//                        .opacity(hasSelection ? 0.7 : 1)
+//                        .padding(.trailing, labelPosition == .inside ? 8 + layoutNode.width : 0)
+//                        .offset(x: labelPosition == .outside ? (8 + layoutNode.width) : 0)
+//                }
+//            }
+
+//            // Label Outside
+//            .overlay(alignment: .trailing) {
+//                if shouldShowLabel && shouldShowOnLeading && labelPosition == .outside {
+//                    labelBuilder(labelContext(value: isFirstColumn ? layoutNode.outgoingValue : layoutNode.incomingValue), .trailing)
+//                        .applyDynamicTypeSize(labelDynamicTypeSize)
+//                        .fixedSize()
+//                        .opacity(hasSelection ? 0.7 : 1)
+//                        .padding(.leading, labelPosition == .inside ? 8 + layoutNode.width : 0)
+//                        .offset(x: labelPosition == .outside ? -(8 + layoutNode.width) : 0)
+//                }
+//            }
+//
+//            .overlay(alignment: .leading) {
+//                if shouldShowLabel && shouldShowOnTrailing && labelPosition == .outside {
+//                    labelBuilder(labelContext(value: layoutNode.incomingValue), .leading)
+//                        .applyDynamicTypeSize(labelDynamicTypeSize)
+//                        .fixedSize()
+//                        .opacity(hasSelection ? 0.7 : 1)
+//                        .padding(.trailing, labelPosition == .inside ? 8 + layoutNode.width : 0)
+//                        .offset(x: labelPosition == .outside ? (8 + layoutNode.width) : 0)
+//                }
+//            }
+            .position(
+                x: layoutNode.x + layoutNode.width / 2 + labelSpace,
+                y: layoutNode.y + layoutNode.height / 2
+            )
+    }
+
+    private var shouldShowOnLeading: Bool {
+        switch labelPosition {
+        case .inside:
+            return isFirstColumn
+        case .outside:
+            return isFirstColumn
+        }
+    }
+
+    private var shouldShowOnTrailing: Bool {
+        switch labelPosition {
+        case .inside:
+            return !isFirstColumn
+        case .outside:
+            return isLastColumn
+        }
+    }
+}
+
+
+// MARK: - Node Label View
+/// Individual node label for better Hierarchy
+
+/// Individual node view - extracted to prevent unnecessary recomputation
+private struct SankeyNodeLabelView<Label: View>: View {
+    let layoutNode: SankeyLayout.LayoutNode
+    var labelSpace: CGFloat = 56
+    let showLabels: Bool
+    let labelPosition: SankeyLabelPosition
+    let valueFormat: SankeyValueFormat
+    let labelDynamicTypeSize: DynamicTypeSize?
+    let hasSelection: Bool
+    let labelBuilder: (SankeyLabelContext, HorizontalAlignment) -> Label
+
+    private var isFirstColumn: Bool { layoutNode.column == 0 }
+    private var isLastColumn: Bool { layoutNode.column == layoutNode.totalColumns - 1 }
+
+    private func labelContext(value: Double) -> SankeyLabelContext {
+        SankeyLabelContext(
+            node: layoutNode.node,
+            value: value,
+            formattedValue: valueFormat.format(value),
+            isFirstColumn: isFirstColumn,
+            isLastColumn: isLastColumn,
+            column: layoutNode.column,
+            totalColumns: layoutNode.totalColumns
+        )
+    }
+
+    private var shouldShowLabel: Bool {
+        guard showLabels else { return false }
+        switch labelPosition {
+        case .inside:
+            return true
+        case .outside:
+            return isFirstColumn || isLastColumn
+        }
+    }
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: 0)
+            .fill(Color.clear)
+            .frame(width: layoutNode.width, height: layoutNode.height)
             .overlay(alignment: .leading) {
                 if shouldShowLabel && shouldShowOnLeading && labelPosition == .inside {
                     labelBuilder(labelContext(value: isFirstColumn ? layoutNode.outgoingValue : layoutNode.incomingValue), .leading)
@@ -639,6 +751,8 @@ private struct SankeyNodeView<Label: View>: View {
         }
     }
 }
+
+
 
 // MARK: - Sankey Diagram View
 
@@ -794,6 +908,27 @@ public struct SankeyDiagramView<LabelContent: View, AnnotationContent: View>: Vi
                         }
                     )
                 }
+                
+                // Draw nodes label
+                ForEach(layout.nodes, id: \.node.id) { layoutNode in
+                    SankeyNodeLabelView(
+                        layoutNode: layoutNode,
+                        labelSpace: labelPosition == .outside ? (labelSpace) : 0,
+                        showLabels: showLabels,
+                        labelPosition: labelPosition,
+                        valueFormat: valueFormat,
+                        labelDynamicTypeSize: labelDynamicTypeSize,
+                        hasSelection: hasSelection,
+                        labelBuilder: { context, alignment in
+                            if let builder = labelBuilder {
+                                AnyView(builder(context, alignment))
+                            } else {
+                                AnyView(defaultLabelView(context: context, alignment: alignment))
+                            }
+                        }
+                    )
+                }
+
 
             }
             .drawingGroup() // Render as single Metal texture for better performance

@@ -46,6 +46,10 @@ struct ContentView: View {
             Text("Sankey Diagram")
                 .font(.headline)
                 .padding(.top)
+            
+            Rectangle()
+                .fill(Color.clear)
+                .frame(width: 200, height: 20)
 
             SankeyDiagramView(data: data,
                               nodeWidth: 8,
