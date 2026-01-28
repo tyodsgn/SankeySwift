@@ -743,29 +743,30 @@ public struct SankeyDiagramView<LabelContent: View, AnnotationContent: View>: Vi
             let hasSelection = selectedLinkId != nil
 
             ZStack(alignment: .topLeading) {
+                
+                
+                // Draw nodes
+                ForEach(layout.nodes, id: \.node.id) { layoutNode in
+                    SankeyNodeView(
+                        layoutNode: layoutNode,
+                        labelSpace: labelPosition == .outside ? (labelSpace) : 0,
+                        showLabels: showLabels,
+                        labelPosition: labelPosition,
+                        valueFormat: valueFormat,
+                        labelDynamicTypeSize: labelDynamicTypeSize,
+                        hasSelection: hasSelection,
+                        labelBuilder: { context, alignment in
+                            if let builder = labelBuilder {
+                                AnyView(builder(context, alignment))
+                            } else {
+                                AnyView(defaultLabelView(context: context, alignment: alignment))
+                            }
+                        }
+                    )
+                }
+                
                 // Draw tappable links
                 ForEach(layout.links, id: \.link.id) { layoutLink in
-                    
-                    // Draw nodes
-                    ForEach(layout.nodes, id: \.node.id) { layoutNode in
-                        SankeyNodeView(
-                            layoutNode: layoutNode,
-                            labelSpace: labelPosition == .outside ? (labelSpace) : 0,
-                            showLabels: showLabels,
-                            labelPosition: labelPosition,
-                            valueFormat: valueFormat,
-                            labelDynamicTypeSize: labelDynamicTypeSize,
-                            hasSelection: hasSelection,
-                            labelBuilder: { context, alignment in
-                                if let builder = labelBuilder {
-                                    AnyView(builder(context, alignment))
-                                } else {
-                                    AnyView(defaultLabelView(context: context, alignment: alignment))
-                                }
-                            }
-                        )
-                    }
-                    
                     SankeyLinkView(
                         layoutLink: layoutLink,
                         labelSpace: labelPosition == .outside ? (labelSpace) : 0,
