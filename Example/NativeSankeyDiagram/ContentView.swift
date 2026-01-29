@@ -41,15 +41,17 @@ struct ContentView: View {
         ]
     )
 
+    @State private var numberOfColumns: Int = 0
+
     var body: some View {
         VStack {
             Text("Sankey Diagram")
                 .font(.headline)
                 .padding(.top)
-            
-            Rectangle()
-                .fill(Color.clear)
-                .frame(width: 200, height: 20)
+
+            Text("Number of columns: \(numberOfColumns)")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
 
             SankeyDiagramView(data: data,
                               nodeWidth: 8,
@@ -57,7 +59,8 @@ struct ContentView: View {
             .valueFormat(.custom({ amount in
                 amount.formatted(.currency(code: "USD"))
             }))
-            
+            .columnCount($numberOfColumns)
+
                 .padding()
         }
     }
@@ -156,4 +159,67 @@ struct ContentView: View {
             .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
         }
         .padding()
+}
+
+#Preview("Column Count with ScrollView") {
+    struct ScrollableExample: View {
+        let data = SankeyData(
+            nodes: [
+                SankeyNode("Source A", color: .blue),
+                SankeyNode("Source B", color: .purple),
+                SankeyNode("Middle X", color: .red),
+                SankeyNode("Middle Y", color: .yellow),
+                SankeyNode("Middle Z", color: .green),
+                SankeyNode("Step 1", color: .orange),
+                SankeyNode("Step 2", color: .cyan),
+                SankeyNode("End 1", color: .pink),
+                SankeyNode("End 2", color: .mint),
+            ],
+            links: [
+                SankeyLink(5, from: "Source A", to: "Middle X"),
+                SankeyLink(7, from: "Source A", to: "Middle Y"),
+                SankeyLink(2, from: "Source B", to: "Middle X"),
+                SankeyLink(9, from: "Source B", to: "Middle Z"),
+                SankeyLink(4, from: "Middle X", to: "Step 1"),
+                SankeyLink(3, from: "Middle Y", to: "Step 1"),
+                SankeyLink(5, from: "Middle Z", to: "Step 2"),
+                SankeyLink(6, from: "Step 1", to: "End 1"),
+                SankeyLink(8, from: "Step 2", to: "End 2"),
+            ]
+        )
+
+        @State private var columnCount: Int = 0
+
+        var body: some View {
+            VStack(spacing: 16) {
+                Text("Adaptive ScrollView Example")
+                    .font(.headline)
+
+                Text("Columns: \(columnCount)")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                Text(columnCount > 2 ? "Scroll enabled (>2 columns)" : "Scroll disabled (≤2 columns)")
+                    .font(.caption)
+                    .foregroundStyle(columnCount > 2 ? .green : .orange)
+
+                Group {
+                    if columnCount > 2 {
+                        ScrollView(.horizontal, showsIndicators: true) {
+                            SankeyDiagramView(data: data, nodeWidth: 8, gradientLinks: true)
+                                .columnCount($columnCount)
+                                .frame(width: 600, height: 300)
+                        }
+                    } else {
+                        SankeyDiagramView(data: data, nodeWidth: 8, gradientLinks: true)
+                            .columnCount($columnCount)
+                            .frame(height: 300)
+                    }
+                }
+            }
+            .padding()
+        }
+    }
+
+    return ScrollableExample()
 }

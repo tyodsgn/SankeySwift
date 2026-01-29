@@ -15,6 +15,7 @@ A native SwiftUI Sankey diagram library for iOS, macOS, tvOS, watchOS, and visio
 - Flexible label positioning (inside or outside the diagram)
 - Customizable fonts, colors, and value formatting
 - Automatic merging of duplicate links
+- Column count binding for dynamic layout decisions
 - High performance with Metal-accelerated rendering
 
 ## Installation
@@ -239,6 +240,35 @@ let data = SankeyData(
     ]
 )
 ```
+
+### Accessing Column Count
+
+You can bind the number of columns to make layout decisions, such as enabling a ScrollView for diagrams with many columns:
+
+```swift
+@State private var columnCount: Int = 0
+
+var body: some View {
+    if columnCount > 2 {
+        // Enable horizontal scrolling for complex diagrams
+        ScrollView(.horizontal) {
+            SankeyDiagramView(data: data)
+                .columnCount($columnCount)
+                .frame(width: CGFloat(columnCount) * 150)
+        }
+    } else {
+        // Display normally for simple diagrams
+        SankeyDiagramView(data: data)
+            .columnCount($columnCount)
+    }
+}
+```
+
+The column count is automatically updated whenever the diagram layout changes, allowing you to:
+- Calculate the required width for the diagram
+- Conditionally enable scrolling based on complexity
+- Adjust spacing or sizing dynamically
+- Display column count information to users
 
 ## Requirements
 

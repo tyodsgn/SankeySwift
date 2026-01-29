@@ -793,6 +793,9 @@ public struct SankeyDiagramView<LabelContent: View, AnnotationContent: View>: Vi
     // State for selected link popover
     @State private var selectedLinkId: UUID?
 
+    // Binding for column count (optional)
+    var columnCountBinding: Binding<Int>?
+
     // Internal init for custom builders
     init(
         data: SankeyData,
@@ -815,7 +818,8 @@ public struct SankeyDiagramView<LabelContent: View, AnnotationContent: View>: Vi
         valueFormat: SankeyValueFormat,
         labelDynamicTypeSize: DynamicTypeSize?,
         labelBuilder: ((SankeyLabelContext, HorizontalAlignment) -> LabelContent)?,
-        annotationBuilder: ((SankeyAnnotationContext) -> AnnotationContent)?
+        annotationBuilder: ((SankeyAnnotationContext) -> AnnotationContent)?,
+        columnCountBinding: Binding<Int>? = nil
     ) {
         self.data = data
         self.nodeWidth = nodeWidth
@@ -838,6 +842,7 @@ public struct SankeyDiagramView<LabelContent: View, AnnotationContent: View>: Vi
         self.labelDynamicTypeSize = labelDynamicTypeSize
         self.labelBuilder = labelBuilder
         self.annotationBuilder = annotationBuilder
+        self.columnCountBinding = columnCountBinding
     }
 
     public var body: some View {
@@ -855,6 +860,8 @@ public struct SankeyDiagramView<LabelContent: View, AnnotationContent: View>: Vi
             )
 
             let hasSelection = selectedLinkId != nil
+
+            let _ = columnCountBinding?.wrappedValue = layout.columns.count
 
             ZStack(alignment: .topLeading) {
                 
@@ -991,6 +998,7 @@ public extension SankeyDiagramView where LabelContent == Never, AnnotationConten
 
         self.labelBuilder = nil
         self.annotationBuilder = nil
+        self.columnCountBinding = nil
     }
 }
 
@@ -1121,6 +1129,36 @@ public extension SankeyDiagramView {
         view.labelDynamicTypeSize = size
         return view
     }
+
+    /// Binds the column count to an external variable
+    ///
+    /// Use this modifier to expose the number of columns generated in the Sankey diagram.
+    /// This is useful for calculating the required width or determining if scroll view is needed.
+    ///
+    /// - Parameter binding: A binding to store the number of columns in the diagram
+    ///
+    /// Example:
+    /// ```swift
+    /// @State private var columnCount: Int = 0
+    ///
+    /// var body: some View {
+    ///     if columnCount > 2 {
+    ///         ScrollView(.horizontal) {
+    ///             SankeyDiagramView(data: data)
+    ///                 .columnCount($columnCount)
+    ///                 .frame(width: CGFloat(columnCount) * 150)
+    ///         }
+    ///     } else {
+    ///         SankeyDiagramView(data: data)
+    ///             .columnCount($columnCount)
+    ///     }
+    /// }
+    /// ```
+    func columnCount(_ binding: Binding<Int>) -> SankeyDiagramView {
+        var view = self
+        view.columnCountBinding = binding
+        return view
+    }
 }
 
 // MARK: - Custom View Builder Modifiers
@@ -1151,7 +1189,8 @@ public extension SankeyDiagramView where LabelContent == Never, AnnotationConten
             valueFormat: valueFormat,
             labelDynamicTypeSize: labelDynamicTypeSize,
             labelBuilder: builder,
-            annotationBuilder: nil
+            annotationBuilder: nil,
+            columnCountBinding: columnCountBinding
         )
     }
 
@@ -1180,7 +1219,8 @@ public extension SankeyDiagramView where LabelContent == Never, AnnotationConten
             valueFormat: valueFormat,
             labelDynamicTypeSize: labelDynamicTypeSize,
             labelBuilder: nil,
-            annotationBuilder: builder
+            annotationBuilder: builder,
+            columnCountBinding: columnCountBinding
         )
     }
 }
@@ -1211,7 +1251,8 @@ public extension SankeyDiagramView where LabelContent == Never {
             valueFormat: valueFormat,
             labelDynamicTypeSize: labelDynamicTypeSize,
             labelBuilder: builder,
-            annotationBuilder: annotationBuilder
+            annotationBuilder: annotationBuilder,
+            columnCountBinding: columnCountBinding
         )
     }
 }
@@ -1242,7 +1283,8 @@ public extension SankeyDiagramView where AnnotationContent == Never {
             valueFormat: valueFormat,
             labelDynamicTypeSize: labelDynamicTypeSize,
             labelBuilder: labelBuilder,
-            annotationBuilder: builder
+            annotationBuilder: builder,
+            columnCountBinding: columnCountBinding
         )
     }
 }
