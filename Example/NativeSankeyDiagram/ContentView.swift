@@ -168,30 +168,38 @@ struct ContentView: View {
     struct ScrollableExample: View {
         let data = SankeyData(
             nodes: [
-                SankeyNode("Source A", color: .blue),
-                SankeyNode("Source B", color: .purple),
-                SankeyNode("Middle X", color: .red),
-                SankeyNode("Middle Y", color: .yellow),
-                SankeyNode("Middle Z", color: .green),
-                SankeyNode("Step 1", color: .orange),
-                SankeyNode("Step 2", color: .cyan),
-                SankeyNode("End 1", color: .pink),
-                SankeyNode("End 2", color: .mint),
+                // Column 1
+                SankeyNode("Start A", color: .blue),
+                SankeyNode("Start B", color: .purple),
+                // Column 2
+                SankeyNode("Step 1", color: .red),
+                SankeyNode("Step 2", color: .orange),
+                // Column 3
+                SankeyNode("Phase X", color: .green),
+                SankeyNode("Phase Y", color: .cyan),
+                // Column 4
+                SankeyNode("Final", color: .pink),
             ],
             links: [
-                SankeyLink(5, from: "Source A", to: "Middle X"),
-                SankeyLink(7, from: "Source A", to: "Middle Y"),
-                SankeyLink(2, from: "Source B", to: "Middle X"),
-                SankeyLink(9, from: "Source B", to: "Middle Z"),
-                SankeyLink(4, from: "Middle X", to: "Step 1"),
-                SankeyLink(3, from: "Middle Y", to: "Step 1"),
-                SankeyLink(5, from: "Middle Z", to: "Step 2"),
-                SankeyLink(6, from: "Step 1", to: "End 1"),
-                SankeyLink(8, from: "Step 2", to: "End 2"),
+                // Column 1 → 2
+                SankeyLink(15, from: "Start A", to: "Step 1"),
+                SankeyLink(10, from: "Start A", to: "Step 2"),
+                SankeyLink(8, from: "Start B", to: "Step 1"),
+                SankeyLink(12, from: "Start B", to: "Step 2"),
+                // Column 2 → 3
+                SankeyLink(12, from: "Step 1", to: "Phase X"),
+                SankeyLink(11, from: "Step 1", to: "Phase Y"),
+                SankeyLink(10, from: "Step 2", to: "Phase X"),
+                SankeyLink(12, from: "Step 2", to: "Phase Y"),
+                // Column 3 → 4
+                SankeyLink(22, from: "Phase X", to: "Final"),
+                SankeyLink(23, from: "Phase Y", to: "Final"),
             ]
+
         )
 
         @State private var columnCount: Int = 0
+        @State private var diagramWidth: CGFloat = 0
 
         var body: some View {
             VStack(spacing: 16) {
@@ -205,12 +213,7 @@ struct ContentView: View {
                 Text(columnCount > 2 ? "Scroll enabled (>2 columns)" : "Scroll disabled (≤2 columns)")
                     .font(.caption)
                     .foregroundStyle(columnCount > 2 ? .green : .orange)
-                
-                Rectangle()
-                    .fill(
-                        LinearGradient(colors: [.purple, .green], startPoint: .leading, endPoint: .trailing)
-                            .opacity(1)
-                    )
+
                 Group {
                     ScrollView(.horizontal, showsIndicators: true) {
                         SankeyDiagramView(data: data,
@@ -218,10 +221,19 @@ struct ContentView: View {
                                           linkOpacity: 0.5,
                                           gradientLinks: true)
                             .columnCount($columnCount)
-                            .frame(minWidth: columnCount > 2 ? nil : 1000)
+                            .frame(width: columnCount > 2 ? 1000 : diagramWidth)
                             .onAppear{
                                 print("columnCount: \(columnCount)")
                             }
+                    }
+                    .scrollDisabled(columnCount <= 2)
+                    .overlay {
+                        GeometryReader { geo in
+                            Color.clear
+                                .onAppear{
+                                    diagramWidth = geo.size.width
+                                }
+                        }
                     }
                 }
             }
@@ -230,52 +242,4 @@ struct ContentView: View {
     }
 
     return ScrollableExample()
-}
-
-#Preview("Improved Gradient - 4 Columns") {
-    let data = SankeyData(
-        nodes: [
-            // Column 1
-            SankeyNode("Start A", color: .blue),
-            SankeyNode("Start B", color: .purple),
-            // Column 2
-            SankeyNode("Step 1", color: .red),
-            SankeyNode("Step 2", color: .orange),
-            // Column 3
-            SankeyNode("Phase X", color: .green),
-            SankeyNode("Phase Y", color: .cyan),
-            // Column 4
-            SankeyNode("Final", color: .pink),
-        ],
-        links: [
-            // Column 1 → 2
-            SankeyLink(15, from: "Start A", to: "Step 1"),
-            SankeyLink(10, from: "Start A", to: "Step 2"),
-            SankeyLink(8, from: "Start B", to: "Step 1"),
-            SankeyLink(12, from: "Start B", to: "Step 2"),
-            // Column 2 → 3
-            SankeyLink(12, from: "Step 1", to: "Phase X"),
-            SankeyLink(11, from: "Step 1", to: "Phase Y"),
-            SankeyLink(10, from: "Step 2", to: "Phase X"),
-            SankeyLink(12, from: "Step 2", to: "Phase Y"),
-            // Column 3 → 4
-            SankeyLink(22, from: "Phase X", to: "Final"),
-            SankeyLink(23, from: "Phase Y", to: "Final"),
-        ]
-    )
-
-    return VStack(spacing: 16) {
-        Text("Improved Gradient - 4 Column Diagram")
-            .font(.headline)
-
-        Text("Notice how each link has a distinct gradient from source to target color")
-            .font(.caption)
-            .foregroundStyle(.secondary)
-            .multilineTextAlignment(.center)
-
-        SankeyDiagramView(data: data, nodeWidth: 12, gradientLinks: true)
-            .frame(height: 400)
-            .padding()
-    }
-    .padding()
 }
