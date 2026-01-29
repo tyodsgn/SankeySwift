@@ -501,6 +501,7 @@ private struct SankeyLinkView<Annotation: View>: View {
         linkShape
             .fill(AnyShapeStyle(fillStyle))
             .contentShape(linkShape)
+            .opacity(linkOpacity)
             .opacity(hasSelection ? (isSelected ? 1 : 0.2) : 1.0)
             .onTapGesture(perform: onTap)
             .overlay {
@@ -518,8 +519,8 @@ private struct SankeyLinkView<Annotation: View>: View {
         if gradientLinks {
             AnyShapeStyle(LinearGradient(
                 colors: [
-                    layoutLink.sourceColor.opacity(linkOpacity),
-                    layoutLink.targetColor.opacity(linkOpacity)
+                    layoutLink.sourceColor,
+                    layoutLink.targetColor
                 ],
                 startPoint: .leading,
                 endPoint: .trailing

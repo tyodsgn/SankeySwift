@@ -202,18 +202,20 @@ struct ContentView: View {
                 Text(columnCount > 2 ? "Scroll enabled (>2 columns)" : "Scroll disabled (≤2 columns)")
                     .font(.caption)
                     .foregroundStyle(columnCount > 2 ? .green : .orange)
-
+                
+                Rectangle()
+                    .fill(
+                        LinearGradient(colors: [.purple, .green], startPoint: .leading, endPoint: .trailing)
+                            .opacity(1)
+                    )
                 Group {
-                    if columnCount > 2 {
-                        ScrollView(.horizontal, showsIndicators: true) {
-                            SankeyDiagramView(data: data, nodeWidth: 8, gradientLinks: true)
-                                .columnCount($columnCount)
-                                .frame(width: 600, height: 300)
-                        }
-                    } else {
-                        SankeyDiagramView(data: data, nodeWidth: 8, gradientLinks: true)
+                    ScrollView(.horizontal, showsIndicators: true) {
+                        SankeyDiagramView(data: data,
+                                          nodeWidth: 8,
+                                          linkOpacity: 1,
+                                          gradientLinks: true)
                             .columnCount($columnCount)
-                            .frame(height: 300)
+                            .frame(minWidth: 500)
                     }
                 }
             }
