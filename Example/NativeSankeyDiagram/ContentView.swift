@@ -32,8 +32,9 @@ struct ContentView: View {
             SankeyLink(9, from: "B", to: "Y"),
             SankeyLink(4, from: "B", to: "Z"),
             // X/Y/Z → Final1/Final2
-//            SankeyLink(4, from: "X", to: "Final1"),
-//            SankeyLink(3, from: "X", to: "Final2"),
+            
+            SankeyLink(4, from: "X", to: "Final1"),
+            SankeyLink(3, from: "X", to: "Final2"),
             SankeyLink(10, from: "Y", to: "Final1"),
             SankeyLink(6, from: "Y", to: "Final2"),
             SankeyLink(5, from: "Z", to: "Final1"),
@@ -212,10 +213,13 @@ struct ContentView: View {
                     ScrollView(.horizontal, showsIndicators: true) {
                         SankeyDiagramView(data: data,
                                           nodeWidth: 8,
-                                          linkOpacity: 1,
+                                          linkOpacity: 0.5,
                                           gradientLinks: true)
                             .columnCount($columnCount)
-                            .frame(minWidth: 500)
+                            .frame(minWidth: columnCount > 2 ? nil : 1000)
+                            .onAppear{
+                                print("columnCount: \(columnCount)")
+                            }
                     }
                 }
             }

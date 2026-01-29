@@ -522,8 +522,8 @@ private struct SankeyLinkView<Annotation: View>: View {
                     layoutLink.sourceColor,
                     layoutLink.targetColor
                 ],
-                startPoint: .leading,
-                endPoint: .trailing
+                startPoint:.init(x: layoutLink.startX + (labelPosition == .outside ? labelSpace : 0), y: 0),
+                endPoint: .init(x: layoutLink.endX + (labelPosition == .outside ? labelSpace : 0), y: 0)
             ))
         } else {
             AnyShapeStyle(layoutLink.sourceColor.opacity(linkOpacity))
