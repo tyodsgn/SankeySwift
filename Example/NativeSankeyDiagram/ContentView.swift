@@ -61,8 +61,10 @@ struct ContentView: View {
                 amount.formatted(.currency(code: "USD"))
             }))
             .columnCount($numberOfColumns)
-
-                .padding()
+            .padding()
+        }
+        .onChange(of: numberOfColumns ) {_,_ in
+            print("number of columns: \(self.numberOfColumns)")
         }
     }
 }
@@ -228,4 +230,52 @@ struct ContentView: View {
     }
 
     return ScrollableExample()
+}
+
+#Preview("Improved Gradient - 4 Columns") {
+    let data = SankeyData(
+        nodes: [
+            // Column 1
+            SankeyNode("Start A", color: .blue),
+            SankeyNode("Start B", color: .purple),
+            // Column 2
+            SankeyNode("Step 1", color: .red),
+            SankeyNode("Step 2", color: .orange),
+            // Column 3
+            SankeyNode("Phase X", color: .green),
+            SankeyNode("Phase Y", color: .cyan),
+            // Column 4
+            SankeyNode("Final", color: .pink),
+        ],
+        links: [
+            // Column 1 → 2
+            SankeyLink(15, from: "Start A", to: "Step 1"),
+            SankeyLink(10, from: "Start A", to: "Step 2"),
+            SankeyLink(8, from: "Start B", to: "Step 1"),
+            SankeyLink(12, from: "Start B", to: "Step 2"),
+            // Column 2 → 3
+            SankeyLink(12, from: "Step 1", to: "Phase X"),
+            SankeyLink(11, from: "Step 1", to: "Phase Y"),
+            SankeyLink(10, from: "Step 2", to: "Phase X"),
+            SankeyLink(12, from: "Step 2", to: "Phase Y"),
+            // Column 3 → 4
+            SankeyLink(22, from: "Phase X", to: "Final"),
+            SankeyLink(23, from: "Phase Y", to: "Final"),
+        ]
+    )
+
+    return VStack(spacing: 16) {
+        Text("Improved Gradient - 4 Column Diagram")
+            .font(.headline)
+
+        Text("Notice how each link has a distinct gradient from source to target color")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.center)
+
+        SankeyDiagramView(data: data, nodeWidth: 12, gradientLinks: true)
+            .frame(height: 400)
+            .padding()
+    }
+    .padding()
 }

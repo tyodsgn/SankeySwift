@@ -379,6 +379,16 @@ extension View {
     }
 }
 
+// MARK: - Preference Key for Column Count
+
+private struct ColumnCountPreferenceKey: PreferenceKey {
+    static var defaultValue: Int = 0
+
+    static func reduce(value: inout Int, nextValue: () -> Int) {
+        value = nextValue()
+    }
+}
+
 // MARK: - Link Shape
 
 /// A shape representing a Sankey link/flow path
@@ -474,6 +484,7 @@ private struct SankeyLinkView<Annotation: View>: View {
     let labelPosition: SankeyLabelPosition
     let isSelected: Bool
     let hasSelection: Bool
+    let diagramWidth: CGFloat
     let onTap: () -> Void
     let annotationBuilder: (SankeyAnnotationContext) -> Annotation
 
@@ -517,16 +528,27 @@ private struct SankeyLinkView<Annotation: View>: View {
 
     private var fillStyle: AnyShapeStyle {
         if gradientLinks {
-            AnyShapeStyle(LinearGradient(
+            // Calculate gradient based on the link's position within the diagram
+            // This ensures the gradient spans exactly from source to target node
+            let adjustedStartX = layoutLink.startX + (labelPosition == .outside ? labelSpace : 0)
+            let adjustedEndX = layoutLink.endX + (labelPosition == .outside ? labelSpace : 0)
+            let totalWidth = diagramWidth + (labelPosition == .outside ? labelSpace : 0)
+
+            // Calculate unit points relative to the diagram width
+            // This prevents gradient from being stretched across the entire canvas
+            let startUnitX = totalWidth > 0 ? adjustedStartX / totalWidth : 0
+            let endUnitX = totalWidth > 0 ? adjustedEndX / totalWidth : 1
+
+            return AnyShapeStyle(LinearGradient(
                 colors: [
                     layoutLink.sourceColor,
                     layoutLink.targetColor
                 ],
-                startPoint:.init(x: layoutLink.startX + (labelPosition == .outside ? labelSpace : 0), y: 0),
-                endPoint: .init(x: layoutLink.endX + (labelPosition == .outside ? labelSpace : 0), y: 0)
+                startPoint: UnitPoint(x: startUnitX, y: 0.5),
+                endPoint: UnitPoint(x: endUnitX, y: 0.5)
             ))
         } else {
-            AnyShapeStyle(layoutLink.sourceColor.opacity(linkOpacity))
+            return AnyShapeStyle(layoutLink.sourceColor)
         }
     }
 }
@@ -862,8 +884,6 @@ public struct SankeyDiagramView<LabelContent: View, AnnotationContent: View>: Vi
 
             let hasSelection = selectedLinkId != nil
 
-            let _ = columnCountBinding?.wrappedValue = layout.columns.count
-
             ZStack(alignment: .topLeading) {
                 
                 
@@ -898,6 +918,7 @@ public struct SankeyDiagramView<LabelContent: View, AnnotationContent: View>: Vi
                         labelPosition: labelPosition,
                         isSelected: selectedLinkId == layoutLink.link.id,
                         hasSelection: hasSelection,
+                        diagramWidth: diagramSize.width,
                         onTap: {
                             withAnimation(.easeInOut(duration: 0.2)) {
                                 if selectedLinkId == layoutLink.link.id {
@@ -940,6 +961,12 @@ public struct SankeyDiagramView<LabelContent: View, AnnotationContent: View>: Vi
 
             }
             .drawingGroup() // Render as single Metal texture for better performance
+            .preference(key: ColumnCountPreferenceKey.self, value: layout.columns.count)
+        }
+        .onPreferenceChange(ColumnCountPreferenceKey.self) { count in
+            DispatchQueue.main.async {
+                columnCountBinding?.wrappedValue = count
+            }
         }
     }
 

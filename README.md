@@ -125,6 +125,17 @@ SankeyDiagramView(data: data)
     .valueFormat(.integer)  // or use custom formatter
 ```
 
+### Gradient Links
+
+Enable gradient coloring on links that transitions smoothly from source to target color:
+
+```swift
+SankeyDiagramView(data: data)
+    .gradientLinks(true)
+```
+
+The gradient is precisely calculated based on each link's actual position, ensuring vibrant color transitions even in multi-column diagrams. Each link displays a distinct gradient from its source node color to its target node color, regardless of the diagram's total width or number of columns.
+
 ### Label Positioning
 
 ```swift
